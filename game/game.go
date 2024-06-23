@@ -1,12 +1,5 @@
 package game
 
-import (
-	"bufio"
-	"fmt"
-	"io"
-	"tictacgo/board"
-)
-
 type Player byte
 
 const (
@@ -14,49 +7,53 @@ const (
 	PLAYER_TWO = 'O'
 )
 
+type TurnOutcome int
+
+const (
+	FAIL    = 0
+	SUCCESS = 1
+	WIN     = 2
+	TIE     = 3
+)
+
 type Game struct {
-	Board *board.Board
+	board [][]byte
 	Turn  Player
 }
 
-func New(b *board.Board) *Game {
+func New() *Game {
 	return &Game{
-		Board: b,
-		Turn:  PLAYER_ONE,
+		board: [][]byte{
+			{' ', ' ', ' '},
+			{' ', ' ', ' '},
+			{' ', ' ', ' '},
+		},
+		Turn: PLAYER_ONE,
 	}
 }
 
-func (g *Game) Run(in io.Reader, out io.Writer) {
-	scanner := bufio.NewScanner(in)
-	var character byte
-
-	for {
-		io.WriteString(out, g.Board.Draw())
-		io.WriteString(out, fmt.Sprintf("It is %c's turn! Please enter a slot to fill:", g.Turn))
-		scanned := scanner.Scan()
-		if !scanned {
-			return
-		}
-
-		character = scanner.Bytes()[0]
-		success, msg := g.Board.FillSlot(int(character-48), byte(g.Turn))
-		if !success {
-			io.WriteString(out, msg)
-			continue
-		}
-
-		if g.checkWin() {
-			io.WriteString(out, g.Board.Draw())
-			io.WriteString(out, fmt.Sprintf("%c wins!!!\n", g.Turn))
-			return
-		}
-
-		if g.Turn == PLAYER_ONE {
-			g.Turn = PLAYER_TWO
-		} else {
-			g.Turn = PLAYER_ONE
-		}
+func (g *Game) MakeMove(player Player, slot int) (TurnOutcome, string) {
+	if slot < 1 || slot > 9 {
+		return FAIL, "Invalid slot number\n"
 	}
+
+	var row, col int
+
+	if slot%3 == 0 {
+		row = (slot / 3) - 1
+		col = 2
+	} else {
+		row = slot / 3
+		col = (slot % 3) - 1
+	}
+
+	if g.board[row][col] != ' ' {
+		return FAIL, "This slot has been taken\n"
+	}
+
+	g.board[row][col] = byte(player)
+
+	return g.checkWin(), ""
 }
 
 //   0 1 2
@@ -64,29 +61,25 @@ func (g *Game) Run(in io.Reader, out io.Writer) {
 // 1 _ _ _
 // 2 _ _ _
 
-func (g *Game) checkWin() bool {
-	if !isNum(g.Board.Slots[0][0]) && g.Board.Slots[0][0] == g.Board.Slots[0][1] && g.Board.Slots[0][0] == g.Board.Slots[0][2] {
-		return true
+func (g *Game) checkWin() TurnOutcome {
+	if g.board[0][0] != ' ' && g.board[0][0] == g.board[0][1] && g.board[0][0] == g.board[0][2] {
+		return WIN
 	}
-	if !isNum(g.Board.Slots[1][0]) && g.Board.Slots[1][0] == g.Board.Slots[1][1] && g.Board.Slots[1][0] == g.Board.Slots[1][2] {
-		return true
+	if g.board[1][0] != ' ' && g.board[1][0] == g.board[1][1] && g.board[1][0] == g.board[1][2] {
+		return WIN
 	}
-	if !isNum(g.Board.Slots[2][0]) && g.Board.Slots[2][0] == g.Board.Slots[2][1] && g.Board.Slots[2][0] == g.Board.Slots[2][2] {
-		return true
+	if g.board[2][0] != ' ' && g.board[2][0] == g.board[2][1] && g.board[2][0] == g.board[2][2] {
+		return WIN
 	}
 
-	if !isNum(g.Board.Slots[0][0]) && g.Board.Slots[0][0] == g.Board.Slots[1][0] && g.Board.Slots[0][0] == g.Board.Slots[2][0] {
-		return true
+	if g.board[0][0] != ' ' && g.board[0][0] == g.board[1][0] && g.board[0][0] == g.board[2][0] {
+		return WIN
 	}
-	if !isNum(g.Board.Slots[0][1]) && g.Board.Slots[0][1] == g.Board.Slots[1][1] && g.Board.Slots[0][1] == g.Board.Slots[2][1] {
-		return true
+	if g.board[0][1] != ' ' && g.board[0][1] == g.board[1][1] && g.board[0][1] == g.board[2][1] {
+		return WIN
 	}
-	if !isNum(g.Board.Slots[0][2]) && g.Board.Slots[0][2] == g.Board.Slots[1][2] && g.Board.Slots[0][2] == g.Board.Slots[2][2] {
-		return true
+	if g.board[0][2] != ' ' && g.board[0][2] == g.board[1][2] && g.board[0][2] == g.board[2][2] {
+		return WIN
 	}
-	return false
-}
-
-func isNum(char byte) bool {
-	return char >= '0' && char <= '9'
+	return SUCCESS
 }
