@@ -17,13 +17,13 @@ const (
 )
 
 type Game struct {
-	board [][]byte
+	Board [][]byte
 	Turn  Player
 }
 
 func New() *Game {
 	return &Game{
-		board: [][]byte{
+		Board: [][]byte{
 			{' ', ' ', ' '},
 			{' ', ' ', ' '},
 			{' ', ' ', ' '},
@@ -32,7 +32,7 @@ func New() *Game {
 	}
 }
 
-func (g *Game) MakeMove(player Player, slot int) (TurnOutcome, string) {
+func (g *Game) MakeMove(slot int) (TurnOutcome, string) {
 	if slot < 1 || slot > 9 {
 		return FAIL, "Invalid slot number\n"
 	}
@@ -47,13 +47,23 @@ func (g *Game) MakeMove(player Player, slot int) (TurnOutcome, string) {
 		col = (slot % 3) - 1
 	}
 
-	if g.board[row][col] != ' ' {
+	if g.Board[row][col] != ' ' {
 		return FAIL, "This slot has been taken\n"
 	}
 
-	g.board[row][col] = byte(player)
+	g.Board[row][col] = byte(g.Turn)
 
-	return g.checkWin(), ""
+	result := g.checkWin()
+
+	if result == SUCCESS {
+		if g.Turn == PLAYER_ONE {
+			g.Turn = PLAYER_TWO
+		} else {
+			g.Turn = PLAYER_ONE
+		}
+	}
+
+	return result, ""
 }
 
 //   0 1 2
@@ -62,24 +72,32 @@ func (g *Game) MakeMove(player Player, slot int) (TurnOutcome, string) {
 // 2 _ _ _
 
 func (g *Game) checkWin() TurnOutcome {
-	if g.board[0][0] != ' ' && g.board[0][0] == g.board[0][1] && g.board[0][0] == g.board[0][2] {
+	if g.Board[0][0] != ' ' && g.Board[0][0] == g.Board[0][1] && g.Board[0][0] == g.Board[0][2] {
 		return WIN
 	}
-	if g.board[1][0] != ' ' && g.board[1][0] == g.board[1][1] && g.board[1][0] == g.board[1][2] {
+	if g.Board[1][0] != ' ' && g.Board[1][0] == g.Board[1][1] && g.Board[1][0] == g.Board[1][2] {
 		return WIN
 	}
-	if g.board[2][0] != ' ' && g.board[2][0] == g.board[2][1] && g.board[2][0] == g.board[2][2] {
+	if g.Board[2][0] != ' ' && g.Board[2][0] == g.Board[2][1] && g.Board[2][0] == g.Board[2][2] {
 		return WIN
 	}
 
-	if g.board[0][0] != ' ' && g.board[0][0] == g.board[1][0] && g.board[0][0] == g.board[2][0] {
+	if g.Board[0][0] != ' ' && g.Board[0][0] == g.Board[1][0] && g.Board[0][0] == g.Board[2][0] {
 		return WIN
 	}
-	if g.board[0][1] != ' ' && g.board[0][1] == g.board[1][1] && g.board[0][1] == g.board[2][1] {
+	if g.Board[0][1] != ' ' && g.Board[0][1] == g.Board[1][1] && g.Board[0][1] == g.Board[2][1] {
 		return WIN
 	}
-	if g.board[0][2] != ' ' && g.board[0][2] == g.board[1][2] && g.board[0][2] == g.board[2][2] {
+	if g.Board[0][2] != ' ' && g.Board[0][2] == g.Board[1][2] && g.Board[0][2] == g.Board[2][2] {
 		return WIN
 	}
+
+	if g.Board[0][0] != ' ' && g.Board[0][0] == g.Board[1][1] && g.Board[0][0] == g.Board[2][2] {
+		return WIN
+	}
+	if g.Board[0][2] != ' ' && g.Board[0][2] == g.Board[1][1] && g.Board[0][2] == g.Board[2][0] {
+		return WIN
+	}
+
 	return SUCCESS
 }

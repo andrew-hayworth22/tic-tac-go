@@ -21,7 +21,7 @@ type ExpectedBoardResult struct {
 	msg    string
 }
 
-func TestFillSlot(t *testing.T) {
+func TestMakeMove(t *testing.T) {
 	tests := []GameTest{
 		{
 			moves: []Move{{1, PLAYER_ONE}},
@@ -94,7 +94,7 @@ func TestFillSlot(t *testing.T) {
 		g := New()
 
 		for idx, move := range tt.moves {
-			result, msg := g.MakeMove(move.player, move.slot)
+			result, msg := g.MakeMove(move.slot)
 			if result != tt.expecteds[idx].result {
 				t.Errorf("Unexpected turn result: Expected = %d. Got = %d. Message = %q", tt.expecteds[idx].result, result, msg)
 			}
@@ -103,8 +103,8 @@ func TestFillSlot(t *testing.T) {
 				t.Errorf("Unexpected message: Expected = %q. Got = %q", tt.expecteds[idx].msg, msg)
 			}
 
-			if !reflect.DeepEqual(g.board, tt.expecteds[idx].board) {
-				t.Errorf("Wrong board values: Expected = %v. Got = %v", tt.expecteds[idx].board, g.board)
+			if !reflect.DeepEqual(g.Board, tt.expecteds[idx].board) {
+				t.Errorf("Wrong board values: Expected = %v. Got = %v", tt.expecteds[idx].board, g.Board)
 			}
 		}
 	}
