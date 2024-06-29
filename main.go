@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"tictacgo/game"
 
@@ -8,8 +9,10 @@ import (
 )
 
 const (
-	BOARD_X = 0
-	BOARD_Y = 3
+	BOARD_X  = 0
+	BOARD_Y  = 3
+	STATUS_X = 0
+	STATUS_Y = 10
 )
 
 func main() {
@@ -40,7 +43,9 @@ func main() {
 
 	g := game.New()
 	drawHeader(s, defaultStyle)
-	drawBoard(s, g, defaultStyle, buttonStyle)
+	drawBoard(s, defaultStyle)
+	drawSlots(s, g, defaultStyle, buttonStyle)
+	drawStatus(s, defaultStyle, "X's turn!")
 
 	for {
 		s.Show()
@@ -82,8 +87,16 @@ func main() {
 
 				if slot != 0 {
 					outcome, _ := g.MakeMove(slot)
-					if outcome == game.SUCCESS {
-						drawBoard(s, g, defaultStyle, buttonStyle)
+					switch outcome {
+					case game.SUCCESS:
+						drawSlots(s, g, defaultStyle, buttonStyle)
+						drawStatus(s, defaultStyle, fmt.Sprintf("%c's turn!", g.Turn))
+					case game.WIN:
+						drawSlots(s, g, defaultStyle, buttonStyle)
+						drawStatus(s, defaultStyle, fmt.Sprintf("%c wins!!!", g.Turn))
+					case game.TIE:
+						drawSlots(s, g, defaultStyle, buttonStyle)
+						drawStatus(s, defaultStyle, "It's a tie!")
 					}
 				}
 			}
@@ -100,23 +113,25 @@ func drawHeader(s tcell.Screen, style tcell.Style) {
 	}
 }
 
-func drawBoard(s tcell.Screen, g *game.Game, defaultStyle tcell.Style, buttonStyle tcell.Style) {
+func drawBoard(s tcell.Screen, style tcell.Style) {
 	xOffset := 0
 	for xOffset < 11 {
-		s.SetContent(BOARD_X+xOffset, BOARD_Y+1, tcell.RuneHLine, nil, defaultStyle)
-		s.SetContent(BOARD_X+xOffset, BOARD_Y+3, tcell.RuneHLine, nil, defaultStyle)
+		s.SetContent(BOARD_X+xOffset, BOARD_Y+1, tcell.RuneHLine, nil, style)
+		s.SetContent(BOARD_X+xOffset, BOARD_Y+3, tcell.RuneHLine, nil, style)
 		xOffset++
 	}
 
-	s.SetContent(BOARD_X+3, BOARD_Y, tcell.RuneVLine, nil, defaultStyle)
-	s.SetContent(BOARD_X+7, BOARD_Y, tcell.RuneVLine, nil, defaultStyle)
+	s.SetContent(BOARD_X+3, BOARD_Y, tcell.RuneVLine, nil, style)
+	s.SetContent(BOARD_X+7, BOARD_Y, tcell.RuneVLine, nil, style)
 
-	s.SetContent(BOARD_X+3, BOARD_Y+2, tcell.RuneVLine, nil, defaultStyle)
-	s.SetContent(BOARD_X+7, BOARD_Y+2, tcell.RuneVLine, nil, defaultStyle)
+	s.SetContent(BOARD_X+3, BOARD_Y+2, tcell.RuneVLine, nil, style)
+	s.SetContent(BOARD_X+7, BOARD_Y+2, tcell.RuneVLine, nil, style)
 
-	s.SetContent(BOARD_X+3, BOARD_Y+4, tcell.RuneVLine, nil, defaultStyle)
-	s.SetContent(BOARD_X+7, BOARD_Y+4, tcell.RuneVLine, nil, defaultStyle)
+	s.SetContent(BOARD_X+3, BOARD_Y+4, tcell.RuneVLine, nil, style)
+	s.SetContent(BOARD_X+7, BOARD_Y+4, tcell.RuneVLine, nil, style)
+}
 
+func drawSlots(s tcell.Screen, g *game.Game, defaultStyle tcell.Style, buttonStyle tcell.Style) {
 	for rowIdx, row := range g.Board {
 		for colIdx, slot := range row {
 			style := defaultStyle
@@ -125,5 +140,11 @@ func drawBoard(s tcell.Screen, g *game.Game, defaultStyle tcell.Style, buttonSty
 			}
 			s.SetContent((BOARD_X+1)+(4*colIdx), BOARD_Y+(2*rowIdx), rune(slot), nil, style)
 		}
+	}
+}
+
+func drawStatus(s tcell.Screen, style tcell.Style, status string) {
+	for idx, char := range status {
+		s.SetContent(STATUS_X+idx, STATUS_Y, char, nil, style)
 	}
 }

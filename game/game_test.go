@@ -6,13 +6,8 @@ import (
 )
 
 type GameTest struct {
-	moves     []Move
+	moves     []int
 	expecteds []ExpectedBoardResult
-}
-
-type Move struct {
-	slot   int
-	player Player
 }
 
 type ExpectedBoardResult struct {
@@ -24,7 +19,7 @@ type ExpectedBoardResult struct {
 func TestMakeMove(t *testing.T) {
 	tests := []GameTest{
 		{
-			moves: []Move{{1, PLAYER_ONE}},
+			moves: []int{1},
 			expecteds: []ExpectedBoardResult{
 				{
 					board:  [][]byte{{PLAYER_ONE, ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '}},
@@ -34,7 +29,7 @@ func TestMakeMove(t *testing.T) {
 			},
 		},
 		{
-			moves: []Move{{1, PLAYER_ONE}, {5, PLAYER_TWO}, {3, PLAYER_ONE}, {9, PLAYER_TWO}},
+			moves: []int{1, 5, 3, 9},
 			expecteds: []ExpectedBoardResult{
 				{
 					board:  [][]byte{{PLAYER_ONE, ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '}},
@@ -59,7 +54,7 @@ func TestMakeMove(t *testing.T) {
 			},
 		},
 		{
-			moves: []Move{{1, PLAYER_ONE}, {1, PLAYER_TWO}},
+			moves: []int{1, 1},
 			expecteds: []ExpectedBoardResult{
 				{
 					board:  [][]byte{{PLAYER_ONE, ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '}},
@@ -74,7 +69,7 @@ func TestMakeMove(t *testing.T) {
 			},
 		},
 		{
-			moves: []Move{{10, PLAYER_ONE}, {0, PLAYER_ONE}},
+			moves: []int{10, 0},
 			expecteds: []ExpectedBoardResult{
 				{
 					board:  [][]byte{{' ', ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '}},
@@ -88,24 +83,89 @@ func TestMakeMove(t *testing.T) {
 				},
 			},
 		},
+		{
+			moves: []int{1, 2, 5, 3, 6, 4, 7, 9, 8},
+			expecteds: []ExpectedBoardResult{
+				{
+					board:  [][]byte{{PLAYER_ONE, ' ', ' '}, {' ', ' ', ' '}, {' ', ' ', ' '}},
+					result: SUCCESS,
+					msg:    "",
+				},
+				{
+					board:  [][]byte{{PLAYER_ONE, PLAYER_TWO, ' '}, {' ', ' ', ' '}, {' ', ' ', ' '}},
+					result: SUCCESS,
+					msg:    "",
+				},
+				{
+					board:  [][]byte{{PLAYER_ONE, PLAYER_TWO, ' '}, {' ', PLAYER_ONE, ' '}, {' ', ' ', ' '}},
+					result: SUCCESS,
+					msg:    "",
+				},
+				{
+					board:  [][]byte{{PLAYER_ONE, PLAYER_TWO, PLAYER_TWO}, {' ', PLAYER_ONE, ' '}, {' ', ' ', ' '}},
+					result: SUCCESS,
+					msg:    "",
+				},
+				{
+					board:  [][]byte{{PLAYER_ONE, PLAYER_TWO, PLAYER_TWO}, {' ', PLAYER_ONE, PLAYER_ONE}, {' ', ' ', ' '}},
+					result: SUCCESS,
+					msg:    "",
+				},
+				{
+					board:  [][]byte{{PLAYER_ONE, PLAYER_TWO, PLAYER_TWO}, {PLAYER_TWO, PLAYER_ONE, PLAYER_ONE}, {' ', ' ', ' '}},
+					result: SUCCESS,
+					msg:    "",
+				},
+				{
+					board:  [][]byte{{PLAYER_ONE, PLAYER_TWO, PLAYER_TWO}, {PLAYER_TWO, PLAYER_ONE, PLAYER_ONE}, {PLAYER_ONE, ' ', ' '}},
+					result: SUCCESS,
+					msg:    "",
+				},
+				{
+					board:  [][]byte{{PLAYER_ONE, PLAYER_TWO, PLAYER_TWO}, {PLAYER_TWO, PLAYER_ONE, PLAYER_ONE}, {PLAYER_ONE, ' ', PLAYER_TWO}},
+					result: SUCCESS,
+					msg:    "",
+				},
+				{
+					board:  [][]byte{{PLAYER_ONE, PLAYER_TWO, PLAYER_TWO}, {PLAYER_TWO, PLAYER_ONE, PLAYER_ONE}, {PLAYER_ONE, PLAYER_ONE, PLAYER_TWO}},
+					result: TIE,
+					msg:    "",
+				},
+			},
+		},
 	}
 
-	for _, tt := range tests {
+	for tidx, tt := range tests {
 		g := New()
 
 		for idx, move := range tt.moves {
-			result, msg := g.MakeMove(move.slot)
+			result, msg := g.MakeMove(move)
 			if result != tt.expecteds[idx].result {
-				t.Errorf("Unexpected turn result: Expected = %d. Got = %d. Message = %q", tt.expecteds[idx].result, result, msg)
+				t.Errorf("TEST %d: Unexpected turn result: Expected = %s. Got = %s. Message = %q", tidx+1, getResultText(tt.expecteds[idx].result), getResultText(result), msg)
 			}
 
 			if msg != tt.expecteds[idx].msg {
-				t.Errorf("Unexpected message: Expected = %q. Got = %q", tt.expecteds[idx].msg, msg)
+				t.Errorf("TEST %d: Unexpected message: Expected = %q. Got = %q", tidx+1, tt.expecteds[idx].msg, msg)
 			}
 
 			if !reflect.DeepEqual(g.Board, tt.expecteds[idx].board) {
-				t.Errorf("Wrong board values: Expected = %v. Got = %v", tt.expecteds[idx].board, g.Board)
+				t.Errorf("TEST %d: Wrong board values: Expected = %v. Got = %v", tidx+1, tt.expecteds[idx].board, g.Board)
 			}
 		}
+	}
+}
+
+func getResultText(result TurnOutcome) string {
+	switch result {
+	case 0:
+		return "FAIL"
+	case 1:
+		return "SUCCESS"
+	case 2:
+		return "WIN"
+	case 3:
+		return "TIE"
+	default:
+		return "UNKNOWN"
 	}
 }

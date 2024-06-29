@@ -66,11 +66,6 @@ func (g *Game) MakeMove(slot int) (TurnOutcome, string) {
 	return result, ""
 }
 
-//   0 1 2
-// 0 _ _ _
-// 1 _ _ _
-// 2 _ _ _
-
 func (g *Game) checkWin() TurnOutcome {
 	if g.Board[0][0] != ' ' && g.Board[0][0] == g.Board[0][1] && g.Board[0][0] == g.Board[0][2] {
 		return WIN
@@ -99,5 +94,41 @@ func (g *Game) checkWin() TurnOutcome {
 		return WIN
 	}
 
+	if g.checkTie() {
+		return TIE
+	}
+
 	return SUCCESS
+}
+
+func (g *Game) checkTie() bool {
+	if g.Board[0][0] == ' ' {
+		return false
+	}
+	if g.Board[0][1] == ' ' {
+		return false
+	}
+	if g.Board[0][2] == ' ' {
+		return false
+	}
+	if g.Board[1][0] == ' ' {
+		return false
+	}
+	if g.Board[1][1] == ' ' {
+		return false
+	}
+	if g.Board[1][2] == ' ' {
+		return false
+	}
+	if g.Board[2][0] == ' ' {
+		return false
+	}
+	if g.Board[2][1] == ' ' {
+		return false
+	}
+	if g.Board[2][2] == ' ' {
+		return false
+	}
+
+	return true
 }
